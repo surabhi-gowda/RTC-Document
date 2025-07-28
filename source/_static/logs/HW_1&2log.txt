@@ -1,0 +1,62 @@
+Test log:
+==========
+
+1.I²C Address Probe:
+--------------------
+
+Command:
+    i2cdetect -y -r 1
+
+root@phyBOARD-WEGA-AM335x:~ i2cdetect -y -r 1                                                            
+     0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f                                                      
+00:          -- -- -- -- -- -- -- -- -- -- -- -- --                                                      
+10: -- -- 12 -- -- -- -- -- UU -- -- -- -- -- -- --                                                      
+20: -- -- -- -- -- -- -- -- -- -- -- -- -- UU -- --                                                      
+30: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --                                                      
+40: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --                                                      
+50: -- -- UU -- -- -- -- -- -- -- -- -- -- -- -- --                                                      
+60: -- -- -- -- -- -- -- -- UU -- -- -- -- -- -- --                                                      
+70: -- -- -- -- -- -- -- --                                                                              
+root@phyBOARD-WEGA-AM335x:~ 
+
+Result:
+-------
+    UU at 0x68 → RTC detected, driver claimed.
+
+I²C Read/Write Basic:
+---------------------
+Commands:
+    i2cget -f -y 1 0x68 0x08  → 0x80
+    i2cset -f -y 1 0x68 0x08 0x11
+    i2cget -f -y 1 0x68 0x08  → 0x11
+    i2cget -f -y 1 0x68 0x04  → 0x13
+    i2cget -f -y 1 0x68 0x0A  → 0x20
+
+Board log:
+----------
+root@phyBOARD-WEGA-AM335x:~ i2cget -f -y 1 0x68 0x08
+[2025-06-26 11:38:19] 0x80
+root@phyBOARD-WEGA-AM335x:~ i2cget -f -y 1 0x68 0x08
+[2025-06-26 11:38:21] 0x80
+root@phyBOARD-WEGA-AM335x:~ i2cget -f -y 1 0x68 0x01
+[2025-06-26 11:38:27] 0x27
+root@phyBOARD-WEGA-AM335x:~ i2cget -f -y 1 0x68 0x01
+[2025-06-26 11:38:28] 0x28
+root@phyBOARD-WEGA-AM335x:~ i2cget -f -y 1 0x68 0x04
+[2025-06-26 11:38:33] 0x13
+root@phyBOARD-WEGA-AM335x:~ i2cget -f -y 1 0x68 0x04
+[2025-06-26 11:38:34] 0x13
+root@phyBOARD-WEGA-AM335x:~ i2cget -f -y 1 0x68 0x0A
+[2025-06-26 11:38:45] 0x20
+root@phyBOARD-WEGA-AM335x:~ i2cget -f -y 1 0x68 0x0A
+[2025-06-26 11:38:50] 0x20
+[2025-06-26 11:39:10] root@phyBOARD-WEGA-AM335x:~ i2cset -f -y 1 0x68 0x08 0x11
+[2025-06-26 11:39:30] root@phyBOARD-WEGA-AM335x:~ i2cget -f -y 1 0x68 0x08
+[2025-06-26 11:39:39] 0x11
+
+Result:
+-------
+     Registers readable.
+     Write verified.
+     Bus stable.
+

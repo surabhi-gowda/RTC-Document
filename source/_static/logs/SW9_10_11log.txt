@@ -1,0 +1,141 @@
+Test log:
+=========
+
+Burst I²C Access Test Log:
+--------------------------
+
+Purpose:
+--------
+Run rapid I²C read loop to ensure RTC driver & I²C bus remain stable.
+
+Command Used:
+-------------
+for i in {1..1000}; do i2cget -f -y 1 0x68 0x00 > /dev/null; done
+
+Board log:
+----------
+
+[2025-06-26 11:39:39] root@phyBOARD-WEGA-AM335x:~ for i in {1..1000}; do i2cget -f -y 1 0x68 0x00 > /d
+[2025-06-26 11:40:10] ev/null; done
+[2025-06-26 11:40:10] root@phyBOARD-WEGA-AM335x:~ for i in {1..1000}; do i2cget -f -y 1 0x68 0x00 > /d
+[2025-06-26 11:40:18] ev/null; done
+root@phyBOARD-WEGA-AM335x:~ for i in {1..1000}; do i2cget -f -y 1 0x68 0x00 > /d
+[2025-06-26 11:40:55] ev/null; done
+[2025-06-26 11:40:58] root@phyBOARD-WEGA-AM335x:~ for i in {1..1000}; do i2cget -f -y 1 0x68 0x00 > /d
+[2025-06-26 11:41:01] ev/null; done
+root@phyBOARD-WEGA-AM335x:~ for i in {1..1000}; do i2cget -f -y 1 0x68 0x00 > /d
+[2025-06-26 11:41:02] ev/null; done
+root@phyBOARD-WEGA-AM335x:~ for i in {1..1000}; do i2cget -f -y 1 0x68 0x00 > /d
+[2025-06-26 11:41:03] ev/null; done
+
+Result:
+-------
+ All iterations completed without bus hang or data corruption.
+ Confirms stable burst I²C access for RTC registers.
+
+
+Kernel Panic Recovery:
+----------------------
+
+Purpose:
+--------
+Trigger intentional kernel crash to test RTC time retention.
+
+Command Used:
+-------------
+echo 1 > /proc/sys/kernel/sysrq
+echo c > /proc/sysrq-trigger
+
+Crash log:
+----------
+root@phyBOARD-WEGA-AM335x:~ echo 1 | tee /proc/sys/kernel/sysrq
+1
+tee: /proc/sys/kernel/sysrq: I/O error
+root@phyBOARD-WEGA-AM335x:~ echo c | tee /proc/sysrq-trigger 
+c[20827.850036] SysRq : Trigger a crash
+[20827.853759] Unable to handle kernel NULL pointer dereference at virtual address 00000000
+[20827.862213] pgd = ede98000
+[20827.865020] [00000000] *pgd=aebd7831, *pte=00000000, *ppte=00000000
+[20827.871643] Internal error: Oops: 817 [#1]
+[20827.875915] Modules linked in:
+[20827.879119] CPU: 0    Not tainted  (3.2.0-PD13.0.0-gb48071df-dirty #7)
+[20827.885986] PC is at sysrq_handle_crash+0x24/0x2c
+[20827.890899] LR is at __handle_sysrq+0x98/0x16c
+[20827.895568] pc : [<c020b9bc>]    lr : [<c020bf5c>]    psr: 20070093
+[20827.895568] sp : ee833ed8  ip : ee833ee8  fp : ee833ee4
+[20827.907562] r10: 00000000  r9 : ee832000  r8 : 00000007
+[20827.913024] r7 : 60070013  r6 : 00000063  r5 : c06c13f0  r4 : c06d4fc4
+[20827.919860] r3 : 00000000  r2 : 00000001  r1 : 00000000  r0 : 00000063
+[20827.926696] Flags: nzCv  IRQs off  FIQs on  Mode SVC_32  ISA ARM  Segment user
+[20827.934234] Control: 10c5387d  Table: ade98019  DAC: 00000015
+[20827.940277] Process tee (pid: 27826, stack limit = 0xee8322f0)
+[20827.946350] Stack: (0xee833ed8 to 0xee834000)
+[20827.950927] 3ec0:                                                       ee833f0c ee833ee8
+[20827.959472] 3ee0: c020bf5c c020b9a4 00000001 00000001 000a105f ee833f78 00000001 00000000
+[20827.968048] 3f00: ee833f24 ee833f10 c020c05c c020bed0 ee833f78 ee9ed140 ee833f3c ee833f28
+[20827.976623] 3f20: c00edb40 c020c03c ede6d440 00000001 ee833f6c ee833f40 c00a4fdc c00edb08
+[20827.985168] 3f40: 00000000 00000000 00000003 00000000 00000000 ede6d440 000a105f 00000001
+[20827.993743] 3f60: ee833fa4 ee833f70 c00a527c c00a4f44 c00955b4 00000000 00000000 00000000
+[20828.002288] 3f80: ffffffff 00000001 000a105f 000a1018 00000004 c0014868 00000000 ee833fa8
+[20828.010864] 3fa0: c00146c0 c00a5248 00000001 000a105f 00000003 000a105f 00000001 00000000
+[20828.019409] 3fc0: 00000001 000a105f 000a1018 00000004 00000001 00000001 000a105f 00000000
+[20828.027984] 3fe0: 00000000 bedf3b7c 401d1118 40221c8c 60070010 00000003 6d8f630c 49a9a49d
+[20828.036529] Backtrace: 
+[20828.039123] [<c020b998>] (sysrq_handle_crash+0x0/0x2c) from [<c020bf5c>] (__handle_sysrq+0x98/0x16c)
+[20828.048675] [<c020bec4>] (__handle_sysrq+0x0/0x16c) from [<c020c05c>] (write_sysrq_trigger+0x2c/0x3c)
+[20828.058349] [<c020c030>] (write_sysrq_trigger+0x0/0x3c) from [<c00edb40>] (proc_reg_write+0x44/0x60)
+[20828.067901]  r4:ee9ed140 r3:ee833f78
+[20828.071685] [<c00edafc>] (proc_reg_write+0x0/0x60) from [<c00a4fdc>] (vfs_write+0xa4/0x148)
+[20828.080413]  r5:00000001 r4:ede6d440
+[20828.084167] [<c00a4f38>] (vfs_write+0x0/0x148) from [<c00a527c>] (sys_write+0x40/0x78)
+[20828.092437]  r8:00000001 r7:000a105f r6:ede6d440 r5:00000000 r4:00000000
+[20828.099548] [<c00a523c>] (sys_write+0x0/0x78) from [<c00146c0>] (ret_fast_syscall+0x0/0x30)
+[20828.108306]  r8:c0014868 r7:00000004 r6:000a1018 r5:000a105f r4:00000001
+[20828.115386] Code: e3a02001 e5832000 f57ff04f e3a03000 (e5c32000) 
+[20828.121887] ---[ end trace 0d053d19fb985c91 ]---
+[20828.126770] Kernel panic - not syncing: Fatal exception
+[20828.132232] Backtrace: 
+[20828.134857] [<c0017d78>] (dump_backtrace+0x0/0x10c) from [<c0431584>] (dump_stack+0x18/0x1c)
+[20828.143707]  r6:ee833d5a r5:c050c0c4 r4:c07036c8 r3:c06c1414
+[20828.149688] [<c043156c>] (dump_stack+0x0/0x1c) from [<c0431780>] (panic+0x64/0x194)
+[20828.157714] [<c043171c>] (panic+0x0/0x194) from [<c0018058>] (die+0x120/0x2c4)
+[20828.165313]  r3:00000001 r2:00004e9c r1:00000000 r0:c050c0c4
+[20828.171264]  r7:00000001
+[20828.173980] [<c0017f38>] (die+0x0/0x2c4) from [<c04315e4>] (__do_kernel_fault.part.3+0x5c/0x7c)
+[20828.183105] [<c0431588>] (__do_kernel_fault.part.3+0x0/0x7c) from [<c001a8f4>] (do_page_fault+0x1e4/0x1fc)
+[20828.193206]  r7:edf4e980 r3:ee833e90
+[20828.196990] [<c001a710>] (do_page_fault+0x0/0x1fc) from [<c00083b0>] (do_DataAbort+0x3c/0xa0)
+[20828.205932] [<c0008374>] (do_DataAbort+0x0/0xa0) from [<c0014298>] (__dabt_svc+0x38/0x60)
+[20828.214508] Exception stack(0xee833e90 to 0xee833ed8)
+[20828.219818] 3e80:                                     00000063 00000000 00000001 00000000
+[20828.228393] 3ea0: c06d4fc4 c06c13f0 00000063 60070013 00000007 ee832000 00000000 ee833ee4
+[20828.236999] 3ec0: ee833ee8 ee833ed8 c020bf5c c020b9bc 20070093 ffffffff
+[20828.243927]  r8:00000007 r7:ee833ec4 r6:ffffffff r5:20070093 r4:c020b9bc
+[20828.251037] [<c020b998>] (sysrq_handle_crash+0x0/0x2c) from [<c020bf5c>] (__handle_sysrq+0x98/0x16c)
+[20828.260620] [<c020bec4>] (__handle_sysrq+0x0/0x16c) from [<c020c05c>] (write_sysrq_trigger+0x2c/0x3c)
+[20828.270324] [<c020c030>] (write_sysrq_trigger+0x0/0x3c) from [<c00edb40>] (proc_reg_write+0x44/0x60)
+[20828.279907]  r4:ee9ed140 r3:ee833f78
+[20828.283721] [<c00edafc>] (proc_reg_write+0x0/0x60) from [<c00a4fdc>] (vfs_write+0xa4/0x148)
+[20828.292449]  r5:00000001 r4:ede6d440
+[20828.296264] [<c00a4f38>] (vfs_write+0x0/0x148) from [<c00a527c>] (sys_write+0x40/0x78)
+[20828.304565]  r8:00000001 r7:000a105f r6:ede6d440 r5:00000000 r4:00000000
+[20828.311645] [<c00a523c>] (sys_write+0x0/0x78) from [<c00146c0>] (ret_fast_syscall+0x0/0x30)
+[20828.320404]  r8:c0014868 r7:00000004 r6:000a1018 r5:000a105f r4:00000001
+
+After Reboot:
+-------------
+phyBOARD-WEGA-AM335x login: root
+root@phyBOARD-WEGA-AM335x:~ 
+root@phyBOARD-WEGA-AM335x:~ hwclock -r -f /dev/rtc0
+Wed Jun 25 18:37:07 2025  0.000000 seconds
+root@phyBOARD-WEGA-AM335x:~ hwclock -r -f /dev/rtc0
+[2025-06-25 18:37:09]Wed Jun 25 18:37:09 2025  0.000000 seconds
+root@phyBOARD-WEGA-AM335x:~ hwclock -r -f /dev/rtc0
+[2025-06-25 18:37:13] Wed Jun 25 18:37:13 2025  0.000000 seconds
+root@phyBOARD-WEGA-AM335x:~ hwclock -r -f /dev/rtc0
+[2025-06-25 18:37:15] Wed Jun 25 18:37:15 2025  0.000000 seconds
+
+Result:
+-------
+ RTC time retained after unexpected kernel crash and reboot.
+ Confirms backup supply & driver reliability.

@@ -1,0 +1,171 @@
+PPM Drift Calculation and Compensation
+======================================
+
+Purpose:
+--------
+Document the calculation of the observed RTC drift in PPM,
+and the applied frequency offset compensation to correct it.
+
+Observation:
+------------
+- Measured drift: ~2 seconds slow per day  
+- Total seconds/day = 86,400 s  
+- PPM formula: (drift seconds / total seconds) * 1,000,000
+
+Drift in ppm:
+    ppm = (drift seconds per day) / total seconds * 1,000,000
+
+Calculation:
+------------
+    ppm = (2 / 86400) * 1,000,000
+         = ~23.15 ppm slow
+
+Action Taken:
+--------------
+To speed up the clock, a **positive frequency compensation** value was applied
+according to the RV-4162-C7 Application Manual section 4.2.
+
+
+The RV-4162-C7 adjusts drift by adding compensation events that slightly
+lengthen or shorten seconds.
+
+Reference table:
+
+| Register | Binary   | Effect                | Approx. Total PPM | Approx. Sec/day Gain |
+| -------- | -------- | --------------------- | ----------------- | -------------------- |
+| `0x21`   | `100001` | +1 event → speed up   | +4.068 ppm        | +0.351 s/day         |
+| `0x22`   | `100010` | +2 events → speed up  | +8.136 ppm        | +0.702 s/day         |
+| `0x23`   | `100011` | +3 events → speed up  | +12.204 ppm       | +1.053 s/day         |
+| `0x24`   | `100100` | +4 events → speed up  | +16.272 ppm       | +1.404 s/day         |
+| `0x25`   | `100101` | +5 events → speed up  | +20.340 ppm       | +1.755 s/day         |
+| `0x26`   | `100110` | +6 events → speed up  | +24.408 ppm       | +2.106 s/day         |
+
+Applied:
+--------
+To match the calculated ~23 ppm drift, `0x25` was chosen i.e, +20.340 ppm.
+
+command:
+    i2cset -f -y 1 0x68 0x08 0x25
+
+  → `0x25` = Binary `0010 0101`:
+       - CLKOE = 1 → CLKOUT enabled
+       - FD = 0
+       - CAL = 0x25 = +11 (example value)
+
+Result:
+-------
+ After applying the compensation, the time drift was reduced.
+ Board kept powered ON for multiple days to confirm stability.
+ RTC time now stays within acceptable limits compared to system time.
+ 
+ 
+ 
+Observed log(long duration):
+------------- 
+Jun27th:
+
+root@phyBOARD-WEGA-AM335x:~ i2cset -f -y 1 0x68 0x08 0x25
+root@phyBOARD-WEGA-AM335x:~ i2cget -f -y 1 0x68 0x08
+[2025-06-26 17:09:06] 0x25
+[2025-06-26 17:09:06] root@phyBOARD-WEGA-AM335x:~ 
+
+root@phyBOARD-WEGA-AM335x:~ hwclock -r -f /dev/rtc0
+[2025-06-27 18:49:17
+Fri Jun 27 18:49:16 2025  0.000000 seconds
+root@phyBOARD-WEGA-AM335x:~ hwclock -r -f /dev/rtc0
+[2025-06-27 18:49:18
+Fri Jun 27 18:49:18 2025  0.000000 seconds
+root@phyBOARD-WEGA-AM335x:~ hwclock -r -f /dev/rtc0
+[2025-06-27 18:49:19
+Fri Jun 27 18:49:19 2025  0.000000 seconds
+root@phyBOARD-WEGA-AM335x:~ hwclock -r -f /dev/rtc0
+[2025-06-27 18:49:20
+Fri Jun 27 18:49:20 2025  0.000000 seconds
+root@phyBOARD-WEGA-AM335x:~ hwclock -r -f /dev/rtc0
+[2025-06-27 18:49:21
+Fri Jun 27 18:49:21 2025  0.000000 seconds
+
+Jun30th:
+
+root@phyBOARD-WEGA-AM335x:~ 
+root@phyBOARD-WEGA-AM335x:~ hwclock -r -f /dev/rtc0
+[2025-06-30 10:27:23
+Mon Jun 30 10:27:23 2025  0.000000 seconds
+root@phyBOARD-WEGA-AM335x:~ hwclock -r -f /dev/rtc0
+[2025-06-30 10:27:25
+Mon Jun 30 10:27:24 2025  0.000000 seconds
+root@phyBOARD-WEGA-AM335x:~ hwclock -r -f /dev/rtc0
+[2025-06-30 10:27:27
+Mon Jun 30 10:27:26 2025  0.000000 seconds
+root@phyBOARD-WEGA-AM335x:~ hwclock -r -f /dev/rtc0
+[2025-06-30 10:27:30
+Mon Jun 30 10:27:30 2025  0.000000 seconds
+root@phyBOARD-WEGA-AM335x:~ hwclock -r -f /dev/rtc0
+[2025-06-30 10:27:31
+Mon Jun 30 10:27:31 2025  0.000000 seconds
+root@phyBOARD-WEGA-AM335x:~ hwclock -r -f /dev/rtc0
+[2025-06-30 10:27:32
+Mon Jun 30 10:27:32 2025  0.000000 seconds
+root@phyBOARD-WEGA-AM335x:~ hwclock -r -f /dev/rtc0
+[2025-06-30 10:27:34
+Mon Jun 30 10:27:34 2025  0.000000 seconds
+
+after poweroff:
+***********************************
+____  _   ___   _______ _____ ____ 
+|  _ `| | | ` ` / /_   _| ____/ ___|
+| |_) | |_| |` V /  | | |  _|| |    
+|  __/|  _  | | |   | | | |__| |___ 
+|_|   |_| |_| |_|   |_| |_____`____|
+
+       _           ____   ___    _    ____  ____     __        _______ ____ 
+ _ __ | |__  _   _| __ ) / _ `  / `  |  _ `|  _ `    ` `      / / ____/ ___|
+| '_ `| '_ `| | | |  _ `| | | |/ _ ` | |_) | | | |____` ` /` / /|  _|| |  _ 
+| |_) | | | | |_| | |_) | |_| / ___ `|  _ <| |_| |_____` V  V / | |__| |_| |
+| .__/|_| |_|`__, |____/ `___/_/   `_`_| `_`____/       `_/`_/  |_____`____|
+|_|          |___/                                                          
+    _           _    __  __ ______________      
+   / `         / `  |  `/  |___ /___ / ___|_  __
+  / _ ` _____ / _ ` | |`/| | |_ ` |_ `___ ` `/ /
+ / ___ `_____/ ___ `| |  | |___) |__) |__) >  < 
+/_/   `_`   /_/   `_`_|  |_|____/____/____/_/`_`
+
+
+OSELAS(R)-phyBOARD-WEGA-AM335x-PD13.0.0 / phyBOARD-WEGA-AM335x-PD13.0.0
+ptxdist-2013.01.0/2014-04-18T12:24:54+0530
+
+phyBOARD-WEGA-AM335x login: root
+[2025-06-30 11:13:49
+root@phyBOARD-WEGA-AM335x:~ i2cget -f -y 1 0x68 0x08
+[2025-06-30 11:14:11
+0x25
+root@phyBOARD-WEGA-AM335x:~ i2cget -f -y 1 0x68 0x08
+[2025-06-30 11:14:12
+0x25
+root@phyBOARD-WEGA-AM335x:~ i2cget -f -y 1 0x68 0x08
+[2025-06-30 11:14:14
+0x25
+root@phyBOARD-WEGA-AM335x:~ hwclock -r -f /dev/rtc0
+[2025-06-30 11:14:49
+Mon Jun 30 11:14:48 2025  0.000000 seconds
+root@phyBOARD-WEGA-AM335x:~ hwclock -r -f /dev/rtc0
+[2025-06-30 11:14:50
+Mon Jun 30 11:14:49 2025  0.000000 seconds
+root@phyBOARD-WEGA-AM335x:~ hwclock -r -f /dev/rtc0
+[2025-06-30 11:14:52
+Mon Jun 30 11:14:52 2025  0.000000 seconds
+root@phyBOARD-WEGA-AM335x:~ hwclock -r -f /dev/rtc0
+[2025-06-30 11:14:55
+Mon Jun 30 11:14:54 2025  0.000000 seconds
+root@phyBOARD-WEGA-AM335x:~ hwclock -r -f /dev/rtc0
+[2025-06-30 11:14:56
+Mon Jun 30 11:14:56 2025  0.000000 seconds
+root@phyBOARD-WEGA-AM335x:~ hwclock -r -f /dev/rtc0
+[2025-06-30 11:14:58
+Mon Jun 30 11:14:58 2025  0.000000 seconds
+root@phyBOARD-WEGA-AM335x:~ hwclock -r -f /dev/rtc0
+[2025-06-30 11:15:00
+Mon Jun 30 11:15:00 2025  0.000000 seconds
+root@phyBOARD-WEGA-AM335x:~ hwclock -r -f /dev/rtc0
+[2025-06-30 11:15:03
+Mon Jun 30 11:15:02 2025  0.000000 seconds

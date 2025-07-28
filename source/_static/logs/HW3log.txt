@@ -1,0 +1,10 @@
+Oscillator & Clock Validation:
+=============================
+
+Measured CLKOUT frequency = 32.7677khz(stable)
+
+with capacitor            = Fluctuating frequency not getting 32.768khz
+when Removed capacitor    = 32.7677khz(stable)
+when connected 3V battery = 32.7677khz(stable)
+
+

@@ -1,0 +1,76 @@
+Test log:
+==========
+
+VCC Loss Simulation:
+--------------------
+
+Purpose: 
+--------
+Verify that RTC continues to keep time when VCC is removed and only VBAT powers the RTC.
+
+
+Board log:
+----------
+
+phyBOARD-WEGA-AM335x login: root
+[2025-06-30 11:13:49
+root@phyBOARD-WEGA-AM335x:~ i2cget -f -y 1 0x68 0x08
+[2025-06-30 11:14:12
+0x25
+root@phyBOARD-WEGA-AM335x:~ i2cget -f -y 1 0x68 0x08
+[2025-06-30 11:14:14
+0x25
+root@phyBOARD-WEGA-AM335x:~ hwclock -r -f /dev/rtc0
+[2025-06-30 11:14:52
+Mon Jun 30 11:14:52 2025  0.000000 seconds
+root@phyBOARD-WEGA-AM335x:~ hwclock -r -f /dev/rtc0
+[2025-06-30 11:14:55
+Mon Jun 30 11:14:54 2025  0.000000 seconds
+root@phyBOARD-WEGA-AM335x:~ hwclock -r -f /dev/rtc0
+[2025-06-30 11:14:56
+Mon Jun 30 11:14:56 2025  0.000000 seconds
+root@phyBOARD-WEGA-AM335x:~ hwclock -r -f /dev/rtc0
+[2025-06-30 11:14:58
+Mon Jun 30 11:14:58 2025  0.000000 seconds
+root@phyBOARD-WEGA-AM335x:~ hwclock -r -f /dev/rtc0
+[2025-06-30 11:15:00
+Mon Jun 30 11:15:00 2025  0.000000 seconds
+
+Result:
+------- 
+ Time continues to increment → RTC correctly switches to backup battery.
+
+
+VBAT Fail Simulation & RTC Reset on Dual Loss:
+----------------------------------------------
+
+Purpose:
+-------- 
+Verify that the RTC loses time when both VCC and VBAT are unavailable, and resets registers to default.
+
+
+Board log:
+----------
+phyBOARD-WEGA-AM335x login: root
+[2025-06-30 18:46:43
+root@phyBOARD-WEGA-AM335x:~ 
+[2025-06-30 18:46:44
+root@phyBOARD-WEGA-AM335x:~ date
+[2025-06-30 18:46:48
+Thu Jan  1 00:00:19 UTC 1970
+root@phyBOARD-WEGA-AM335x:~ date
+[2025-06-30 18:46:52
+Thu Jan  1 00:00:23 UTC 1970
+root@phyBOARD-WEGA-AM335x:~ hwclock -r -f /dev/rtc0 
+[2025-06-30 18:46:59
+hwclock: RTC_RD_TIME: Invalid argument
+root@phyBOARD-WEGA-AM335x:~ hwclock -r -f /dev/rtc0 
+[2025-06-30 18:47:02
+hwclock: RTC_RD_TIME: Invalid argument
+root@phyBOARD-WEGA-AM335x:~ i2cget -f -y 1 0x68 0x08
+[2025-06-30 18:47:20
+0x80
+
+Result:
+-------  
+ RTC reset confirmed → no valid time retained → matches expected behavior when both power sources are lost.

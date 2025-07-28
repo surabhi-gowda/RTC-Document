@@ -1,0 +1,53 @@
+Test log:
+==========
+
+Functional RTC Tests Log:
+-------------------------
+
+Test Steps:
+-----------
+
+1.Set system date:
+    date 062413422025.20  → Tue Jun 24 13:42:20 UTC 2025
+
+2. Write to RTC:
+    hwclock -w -f /dev/rtc0
+
+3. Read back:
+    hwclock -r -f /dev/rtc0 → Tue Jun 24 13:42:38 2025
+
+4. Sync RTC to system:
+    hwclock -s -f /dev/rtc0
+
+5. Verify:
+    date → Tue Jun 24 13:42:55 UTC 2025
+
+6. Reboot → Login → read again:
+    hwclock -r -f /dev/rtc0 
+    date 
+
+Board log:
+----------
+root@phyBOARD-WEGA-AM335x:~ date 062413422025.20; hwclock -w -f /dev/rtc0
+[2025-06-24 13:42:20] Tue Jun 24 13:42:20 UTC 2025
+[2025-06-24 13:42:20] root@phyBOARD-WEGA-AM335x:~ 
+root@phyBOARD-WEGA-AM335x:~ date
+[2025-06-24 13:42:25] Tue Jun 24 13:42:25 UTC 2025
+root@phyBOARD-WEGA-AM335x:~ hwclock -r -f /dev/rtc0
+[2025-06-24 13:42:38] Tue Jun 24 13:42:38 2025  0.000000 seconds
+root@phyBOARD-WEGA-AM335x:~ hwclock -r -f /dev/rtc0
+[2025-06-24 13:42:39] Tue Jun 24 13:42:39 2025  0.000000 seconds
+root@phyBOARD-WEGA-AM335x:~ hwclock -r -f /dev/rtc0
+[2025-06-24 13:42:40] Tue Jun 24 13:42:40 2025  0.000000 seconds
+root@phyBOARD-WEGA-AM335x:~ hwclock -r -f /dev/rtc0
+[2025-06-24 13:42:42] Tue Jun 24 13:42:42 2025  0.000000 seconds
+[2025-06-24 13:42:42] root@phyBOARD-WEGA-AM335x:~ 
+
+
+Result:
+-------
+
+ RTC read/write confirmed.
+ Time retained across reboot.
+ Functional RTC test passed.
+
